@@ -46,6 +46,12 @@
 #include "llvm/Transforms/Vectorize.h"
 #include "llvm/Transforms/Vectorize/LoopVectorize.h"
 #include "llvm/Transforms/Vectorize/SLPVectorizer.h"
+#include "llvm/Transforms/Obfuscation/BogusControlFlow.h"
+#include "llvm/Transforms/Obfuscation/Flattening.h"
+#include "llvm/Transforms/Obfuscation/Split.h"
+#include "llvm/Transforms/Obfuscation/Substitution.h"
+#include "llvm/Transforms/Obfuscation/StringObfuscation.h"
+#include "llvm/Transforms/Obfuscation/CryptoUtils.h"
 
 using namespace llvm;
 
@@ -147,6 +153,33 @@ cl::opt<bool> EnableOrderFileInstrumentation(
     "enable-order-file-instrumentation", cl::init(false), cl::Hidden,
     cl::desc("Enable order file instrumentation (default = off)"));
 
+// Flags for Obfuscation
+static cl::opt<bool> Flattening(
+  "fla", cl::init(false),
+  cl::desc("Enable the flattening pass"));
+
+static cl::opt<bool> BogusControlFlow(
+  "bcf", cl::init(false),
+  cl::desc("Enable bogus control flow"));
+
+static cl::opt<bool> Substitution(
+  "sub", cl::init(false),
+  cl::desc("Enable instruction substitutions"));
+
+static cl::opt<std::string> AesSeed(
+  "aesSeed", cl::init(""),
+  cl::desc("seed for the AES-CTR PRNG"));
+
+static cl::opt<bool> Split(
+  "spli", cl::init(false),
+  cl::desc("Enable basic block splitting"));
+
+static cl::opt<std::string> Seed("seed", cl::init(""),
+                           cl::desc("seed for the random"));
+
+static cl::opt<bool> StringObf("sobf", cl::init(false),
+                           cl::desc("Enable the string obfuscation"));
+
 PassManagerBuilder::PassManagerBuilder() {
     OptLevel = 2;
     SizeLevel = 0;
@@ -175,6 +208,18 @@ PassManagerBuilder::PassManagerBuilder() {
     PrepareForThinLTO = EnablePrepareForThinLTO;
     PerformThinLTO = EnablePerformThinLTO;
     DivergentTarget = false;
+
+    // Initialization of the global cryptographically
+    // secure pseudo-random generator
+    if(!AesSeed.empty()) {
+        llvm::cryptoutils->prng_seed(AesSeed.c_str());
+        if(!llvm::cryptoutils->prng_seed(AesSeed.c_str()))
+          exit(1);
+    }
+
+    if(!Seed.empty()) {
+      llvm::cryptoutils->prng_seed(Seed.c_str());
+    }
 }
 
 PassManagerBuilder::~PassManagerBuilder() {
@@ -467,6 +512,12 @@ void PassManagerBuilder::populateModulePassManager(
       MPM.add(createEliminateAvailableExternallyPass());
       MPM.add(createGlobalDCEPass());
     }
+
+    MPM.add(createSubstitution(Substitution));
+    MPM.add(createSplitBasicBlock(Split));
+    MPM.add(createBogus(BogusControlFlow));
+    MPM.add(createFlattening(Flattening));
+    MPM.add(createStringObfuscation(StringObf));
 
     addExtensionsToPM(EP_EnabledOnOptLevel0, MPM);
 
@@ -775,6 +826,12 @@ void PassManagerBuilder::populateModulePassManager(
   // LoopSink (and other loop passes since the last simplifyCFG) might have
   // resulted in single-entry-single-exit or empty blocks. Clean up the CFG.
   MPM.add(createCFGSimplificationPass());
+
+  MPM.add(createSubstitution(Substitution));
+  MPM.add(createSplitBasicBlock(Split));
+  MPM.add(createBogus(BogusControlFlow));
+  MPM.add(createFlattening(Flattening));
+  MPM.add(createStringObfuscation(StringObf));
 
   addExtensionsToPM(EP_OptimizerLast, MPM);
 

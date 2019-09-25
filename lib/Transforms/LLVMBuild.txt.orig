@@ -1,4 +1,4 @@
-;===- ./lib/Transforms/IPO/LLVMBuild.txt -----------------------*- Conf -*--===;
+;===- ./lib/Transforms/LLVMBuild.txt ---------------------------*- Conf -*--===;
 ;
 ; Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 ; See https://llvm.org/LICENSE.txt for license information.
@@ -14,9 +14,10 @@
 ;
 ;===------------------------------------------------------------------------===;
 
+[common]
+subdirectories = AggressiveInstCombine Coroutines IPO InstCombine Instrumentation Scalar Utils Vectorize ObjCARC
+
 [component_0]
-type = Library
-name = IPO
-parent = Transforms
-library_name = ipo
-required_libraries = AggressiveInstCombine Analysis BitReader BitWriter Core InstCombine IRReader Linker Object ProfileData Scalar Support TransformUtils Vectorize Instrumentation Obfuscation
+type = Group
+name = Transforms
+parent = Libraries
