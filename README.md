@@ -36,7 +36,7 @@ Ref:
 http://llvm.org/docs/CMake.html#developing-llvm-passes-out-of-source
 https://llvm.org/docs/WritingAnLLVMPass.html#registering-dynamically-loaded-passes
 
-Simplily:
+simplify:
 
 ```
 mkdir build
