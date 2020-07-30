@@ -36,6 +36,15 @@ Ref:
 http://llvm.org/docs/CMake.html#developing-llvm-passes-out-of-source
 https://llvm.org/docs/WritingAnLLVMPass.html#registering-dynamically-loaded-passes
 
+# How to use :
+
+This version of o-llvm pass support autoload: (impl details: https://github.com/rdadolf/clangtool), so just:
+
+```
+ clang -Xclang -load -Xclang <custom-pass>.so ..
+```
+
+
 
 When you are done developing your pass, you may wish to integrate it into the LLVM source tree. You can achieve it in two easy steps:
 
