@@ -21,77 +21,13 @@ You can cite Obfuscator-LLVM using the following Bibtex entry:
 
 # How to Build :
 
-  ## Clone the repo
+From : http://llvm.org/docs/CMake.html#developing-llvm-passes-out-of-source
 
-```
-git clone https://github.com/spelle/obfuscator -b llvm-9.0.0 obfuscator-llvm-9.0.0.src
-```
+When you are done developing your pass, you may wish to integrate it into the LLVM source tree. You can achieve it in two easy steps:
 
-  ## Retrieve dependencies
+*    Copying <pass name> folder into <LLVM root>/lib/Transform directory.
+*    Adding add_subdirectory(<pass name>) line into <LLVM root>/lib/Transform/CMakeLists.txt.
 
-```
-curl -E -fsSL http://releases.llvm.org/9.0.0/cfe-9.0.0.src.tar.xz -o cfe-9.0.0.src.tar.xz && \
-curl -E -fsSL http://releases.llvm.org/9.0.0/compiler-rt-9.0.0.src.tar.xz -o compiler-rt-9.0.0.src.tar.xz && \
-curl -E -fsSL http://releases.llvm.org/9.0.0/libcxx-9.0.0.src.tar.xz -o libcxx-9.0.0.src.tar.xz && \
-curl -E -fsSL http://releases.llvm.org/9.0.0/libcxxabi-9.0.0.src.tar.xz -o libcxxabi-9.0.0.src.tar.xz && \
-curl -E -fsSL http://releases.llvm.org/9.0.0/libunwind-9.0.0.src.tar.xz -o libunwind-9.0.0.src.tar.xz && \
-curl -E -fsSL http://releases.llvm.org/9.0.0/lld-9.0.0.src.tar.xz -o lld-9.0.0.src.tar.xz && \
-curl -E -fsSL http://releases.llvm.org/9.0.0/lldb-9.0.0.src.tar.xz -o lldb-9.0.0.src.tar.xz && \
-curl -E -fsSL http://releases.llvm.org/9.0.0/openmp-9.0.0.src.tar.xz -o openmp-9.0.0.src.tar.xz && \
-curl -E -fsSL http://releases.llvm.org/9.0.0/polly-9.0.0.src.tar.xz  -o polly-9.0.0.src.tar.xz && \
-curl -E -fsSL http://releases.llvm.org/9.0.0/clang-tools-extra-9.0.0.src.tar.xz -o clang-tools-extra-9.0.0.src.tar.xz && \
-curl -E -fsSL http://releases.llvm.org/9.0.0/test-suite-9.0.0.src.tar.xz -o test-suite-9.0.0.src.tar.xz && \
-for f in $(ls *.tar.xz) ; do tar xf $f ; done
-```
-
-  ## Create links for projects
-
-```
-cd obfuscator-llvm-9.0.0.src && \
-cd projects && \
-ln -snf ../../compiler-rt-9.0.0.src compiler-rt && \
-ln -snf ../../libcxx-9.0.0.src libcxx && \
-ln -snf ../../libcxxabi-9.0.0.src libcxxabi && \
-ln -snf ../../libunwind-9.0.0.src libunwind && \
-ln -snf ../../openmp-9.0.0.src openmp && \
-ln -snf ../../test-suite-9.0.0.src test-suite && \
-cd ..
-```
-
-  ## Create links for tools
-
-```
-cd tools && \
-ln -snf ../../cfe-9.0.0.src clang && \
-ln -snf ../../lld-9.0.0.src lld && \
-ln -snf ../../lldb-9.0.0.src lldb && \
-ln -snf ../../polly-9.0.0.src polly && \
-cd clang && \
-cd tools && \
-ln -snf ../../clang-tools-extra-9.0.0.src extra && \
-cd .. && \
-cd .. && \
-cd .. && \
-cd ..
-```
-
- ## Launch the build
-
-Using `cmake` & `make`
-
-```
-mkdir obfuscator-llvm-9.0.0.build
-cd obfuscator-llvm-9.0.0.build
-cmake -G "Unix Makefiles" -DLLDB_CODESIGN_IDENTITY='' ../obfuscator-llvm-9.0.0.src
-make -j7
-```
-
-Following flags can be added to the `cmake` command line
-
-```
--DLLVM_ENABLE_ASSERTIONS=ON 
--DCMAKE_BUILD_TYPE=Release
-```
 
 ### Special case for macOS & Xcode
 
@@ -127,4 +63,3 @@ export TOOLCHAINS="LLVM9.0.0"
 ```
 
 In Xcode.app, you can select `Xcode -> Toolchains -> org.llvm.9.0.0` in the menu.
-
