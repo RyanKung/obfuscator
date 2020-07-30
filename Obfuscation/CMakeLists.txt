@@ -7,5 +7,16 @@ add_llvm_library(LLVMObfuscation MODULE
   StringObfuscation.cpp
   CryptoUtils.cpp
   )
+#[[
+add_llvm_pass_plugin(LLVMObfuscation
+  Substitution.cpp
+  BogusControlFlow.cpp
+  Utils.cpp
+  SplitBasicBlocks.cpp
+  Flattening.cpp
+  StringObfuscation.cpp
+  CryptoUtils.cpp
+  )
+]]
 
 add_dependencies(LLVMObfuscation intrinsics_gen)

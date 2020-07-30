@@ -31,7 +31,11 @@ You can cite Obfuscator-LLVM using the following Bibtex entry:
 
 # How to Build :
 
-From : http://llvm.org/docs/CMake.html#developing-llvm-passes-out-of-source
+Ref:
+
+http://llvm.org/docs/CMake.html#developing-llvm-passes-out-of-source
+https://llvm.org/docs/WritingAnLLVMPass.html#registering-dynamically-loaded-passes
+
 
 When you are done developing your pass, you may wish to integrate it into the LLVM source tree. You can achieve it in two easy steps:
 
