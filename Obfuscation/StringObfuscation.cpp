@@ -4,6 +4,7 @@
 #include <strstream>
 
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/Alignment.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Constants.h"
@@ -250,6 +251,7 @@ public:
 
 private:
 	void addDecodeFunction(Module *mod, std::vector<encVar*> *gvars) {
+
 		// Declare and add the function definition
 		std::vector<Type*> FuncTy_args;
 		FunctionType* FuncTy = FunctionType::get(
@@ -279,6 +281,7 @@ private:
 				APInt(32, 1));
 		BasicBlock* label_entry = BasicBlock::Create(mod->getContext(), "entry",
 				fdecode);
+
 
 		if (NULL != gvars) {
 
@@ -327,7 +330,7 @@ private:
 						label_for_body);
 				LoadInst* ptr_19 = new LoadInst(gvar, "", false,
 						label_for_body);
-				ptr_19->setAlignment(8);
+				ptr_19->setAlignment(Align(8));
 
 				// Array/ptr load (GetElementPtr can be a bitch about this!)
 				std::vector<Value*> ptr_32_indices;
@@ -343,7 +346,7 @@ private:
 				DEBUG_WITH_TYPE(DEBUG_TYPE, dbgs() << __PRETTY_FUNCTION__ << ": int8_20 : " << int8_20->getOpcodeName() << '\n' );
 				DEBUG_WITH_TYPE(DEBUG_TYPE, dbgs() << __PRETTY_FUNCTION__ << ": int8_20 : " << int8_20->getName() << '\n' );
 
-				int8_20->setAlignment(1);
+				int8_20->setAlignment(Align(1));
 				// Decode
 				ConstantInt* const_key = ConstantInt::get(mod->getContext(),
 						APInt(8, key));
@@ -356,7 +359,7 @@ private:
 				// Store
 				StoreInst* void_21 = new StoreInst(int8_dec, ptr_arrayidx,
 						false, label_for_body);
-				void_21->setAlignment(1);
+				void_21->setAlignment(Align(1));
 				// Adjust loop counter
 				DEBUG_WITH_TYPE(DEBUG_TYPE, dbgs() << __PRETTY_FUNCTION__ << ": Creating INC BinaryOperator for " << gvar->getName() << '\n' );
 				BinaryOperator* int32_inc = BinaryOperator::Create(
