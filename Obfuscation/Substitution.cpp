@@ -17,6 +17,10 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Obfuscation/Utils.h"
 #include "llvm/IR/Intrinsics.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
+
+
 
 #define DEBUG_TYPE "substitution"
 
@@ -575,3 +579,9 @@ void Substitution::xorSubstitutionRand(BinaryOperator *bo) {
   bo->replaceAllUsesWith(op);
 }
 
+static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
+  PM.add(new Substitution());
+}
+// These constructors add our pass to a list of global extensions.
+static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
+static RegisterStandardPasses clangtoolLoader_O0(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);

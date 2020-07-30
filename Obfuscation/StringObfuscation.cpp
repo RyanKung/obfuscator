@@ -15,6 +15,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Obfuscation/CryptoUtils.h"
 #include "llvm/Transforms/Obfuscation/StringObfuscation.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 
 using namespace llvm;
 
@@ -576,3 +578,12 @@ static RegisterPass<StringObfuscationPass> X("GVDiv",
 Pass * llvm::createStringObfuscation(bool flag) {
 	return new StringObfuscationPass(flag);
 }
+
+// ref: https://github.com/rdadolf/clangtool/blob/master/clangtool.cpp
+
+static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
+  PM.add(new StringObfuscationPass());
+}
+// These constructors add our pass to a list of global extensions.
+static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
+static RegisterStandardPasses clangtoolLoader_O0(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);

@@ -15,6 +15,8 @@
 #include "llvm/Transforms/Obfuscation/Flattening.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Obfuscation/CryptoUtils.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
+#include "llvm/IR/LegacyPassManager.h"
 
 #define DEBUG_TYPE "flattening"
 
@@ -39,6 +41,16 @@ struct Flattening : public FunctionPass {
 char Flattening::ID = 0;
 static RegisterPass<Flattening> X("flattening", "Call graph flattening");
 Pass *llvm::createFlattening(bool flag) { return new Flattening(flag); }
+
+// ref: https://github.com/rdadolf/clangtool/blob/master/clangtool.cpp
+
+static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
+  PM.add(new Flattening());
+}
+// These constructors add our pass to a list of global extensions.
+static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
+static RegisterStandardPasses clangtoolLoader_O0(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);
+
 
 bool Flattening::runOnFunction(Function &F) {
   Function *tmp = &F;

@@ -92,6 +92,8 @@
 
 #include "llvm/Transforms/Obfuscation/BogusControlFlow.h"
 #include "llvm/Transforms/Obfuscation/Utils.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 
 // Stats
 #define DEBUG_TYPE "BogusControlFlow"
@@ -156,7 +158,7 @@ namespace {
             return true ;
         }
       }
-      
+
       return false ;
     }
 
@@ -624,3 +626,13 @@ Pass *llvm::createBogus() {
 Pass *llvm::createBogus(bool flag) {
   return new BogusControlFlow(flag);
 }
+
+
+// ref: https://github.com/rdadolf/clangtool/blob/master/clangtool.cpp
+
+static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
+  PM.add(new BogusControlFlow());
+}
+// These constructors add our pass to a list of global extensions.
+static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
+static RegisterStandardPasses clangtoolLoader_O0(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);

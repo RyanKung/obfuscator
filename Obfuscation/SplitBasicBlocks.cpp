@@ -14,6 +14,10 @@
 #include "llvm/Transforms/Obfuscation/Split.h"
 #include "llvm/Transforms/Obfuscation/Utils.h"
 #include "llvm/Transforms/Obfuscation/CryptoUtils.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
+
+
 
 #define DEBUG_TYPE "split"
 
@@ -33,7 +37,7 @@ struct SplitBasicBlock : public FunctionPass {
 
   SplitBasicBlock() : FunctionPass(ID) {}
   SplitBasicBlock(bool flag) : FunctionPass(ID) {
-    
+
     this->flag = flag;
   }
 
@@ -142,3 +146,12 @@ void SplitBasicBlock::shuffle(std::vector<int> &vec) {
   }
 }
 
+
+// ref: https://github.com/rdadolf/clangtool/blob/master/clangtool.cpp
+
+static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
+  PM.add(new SplitBasicBlock());
+}
+// These constructors add our pass to a list of global extensions.
+static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
+static RegisterStandardPasses clangtoolLoader_O0(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);
