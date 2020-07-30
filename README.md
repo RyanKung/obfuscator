@@ -1,3 +1,11 @@
+# Warning: This repo is UNSTABLE
+
+
+# TL;DR
+
+This repo is withdrawed from the offical version  [LLVM-4.0](https://github.com/obfuscator-llvm/obfuscator/tree/llvm-4.0), and spelle's [LLVM-9.0.0](https://github.com/spelle/obfuscator/tree/llvm-9.0.0),
+but removed all llvm codes for supporting build outside llvm codetree.
+
 Please have a look at the [wiki](https://github.com/obfuscator-llvm/obfuscator/wiki)!
 
 Current (official) version: [LLVM-4.0](https://github.com/obfuscator-llvm/obfuscator/tree/llvm-4.0)
@@ -5,6 +13,8 @@ Current (official) version: [LLVM-4.0](https://github.com/obfuscator-llvm/obfusc
 Current version on this repo is [LLVM-9.0.0](https://github.com/spelle/obfuscator/tree/llvm-9.0.0)
 
 You can cite Obfuscator-LLVM using the following Bibtex entry:
+
+
 
 ```
 @INPROCEEDINGS{ieeespro2015-JunodRWM,
