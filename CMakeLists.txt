@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-
+set(ARCH "x86_64")
 set(CMAKE_CXX_STANDARD 14)
 find_package(LLVM REQUIRED CONFIG)
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")

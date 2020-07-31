@@ -49,5 +49,5 @@ cmake .. & make
 This version of o-llvm pass support autoload: (impl details: https://github.com/rdadolf/clangtool), so just:
 
 ```
- clang -Xclang -load -Xclang <custom-pass>.so ..
+clang -Xclang -load -Xclang ../../build/Obfuscation/LLVMObfuscation.dylib  -fobjc-arc ./main.m
 ```
