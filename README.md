@@ -3,7 +3,11 @@
 
 # TL;DR
 
-This llvm obfuscator pass is depends on ieeespro2015-JunodRWM's work ( [LLVM-4.0](https://github.com/obfuscator-llvm/obfuscator/tree/llvm-4.0)), and spelle's [LLVM-9.0.0](https://github.com/spelle/obfuscator/tree/llvm-9.0.0).
+LLVM obfuscator pass is depends on ieeespro2015-JunodRWM ( [LLVM-4.0](https://github.com/obfuscator-llvm/obfuscator/tree/llvm-4.0)), and spelle's work [LLVM-9.0.0](https://github.com/spelle/obfuscator/tree/llvm-9.0.0).
+
+The difference between this impl and the origin is, LLVMObfusPass is a autoload plugin, and not require origin LLVM codes for compiling.
+
+
 It contains passes:
 
 * Flattening: flattening, Call graph flattening (unstable);
