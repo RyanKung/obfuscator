@@ -37,7 +37,6 @@ namespace llvm {
 
   StringObfuscationPass() :
     ModulePass(ID) {
-      is_flag = true;
     }
 
   StringObfuscationPass(bool flag) :
@@ -47,8 +46,8 @@ namespace llvm {
 
     virtual bool runOnModule(Module &M) {
 
-      /* if (!is_flag) */
-      /* 	return false; */
+      if (!is_flag)
+	return false;
 
       std::vector<GlobalVariable*> toDelConstGlob;
       //std::vector<GlobalVariable*> encGlob;
@@ -574,7 +573,7 @@ Pass * llvm::createStringObfuscation(bool flag) {
 // ref: https://github.com/rdadolf/clangtool/blob/master/clangtool.cpp
 
 static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
-  PM.add(new StringObfuscationPass());
+  PM.add(new StringObfuscationPass(true));
 }
 // These constructors add our pass to a list of global extensions.
 static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);

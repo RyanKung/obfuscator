@@ -30,9 +30,7 @@ struct Flattening : public FunctionPass {
   static char ID;  // Pass identification, replacement for typeid
   bool flag;
 
-  Flattening() : FunctionPass(ID) {
-    //  this->flag = true;
-  }
+  Flattening() : FunctionPass(ID) {}
   Flattening(bool flag) : FunctionPass(ID) { this->flag = flag; }
 
   bool runOnFunction(Function &F);
@@ -45,14 +43,6 @@ static RegisterPass<Flattening> X("flattening", "Call graph flattening");
 Pass *llvm::createFlattening(bool flag) { return new Flattening(flag); }
 
 // ref: https://github.com/rdadolf/clangtool/blob/master/clangtool.cpp
-
-static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
-  PM.add(new Flattening());
-}
-// These constructors add our pass to a list of global extensions.
-static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
-static RegisterStandardPasses clangtoolLoader_O0(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);
-
 
 bool Flattening::runOnFunction(Function &F) {
   Function *tmp = &F;
@@ -255,3 +245,11 @@ bool Flattening::flatten(Function *f) {
 
   return true;
 }
+
+
+static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
+  PM.add(new Flattening(false));
+}
+// These constructors add our pass to a list of global extensions.
+static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
+static RegisterStandardPasses clangtoolLoader_O0(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);

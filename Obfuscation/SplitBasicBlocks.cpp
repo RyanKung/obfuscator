@@ -36,7 +36,6 @@ struct SplitBasicBlock : public FunctionPass {
   bool flag;
 
   SplitBasicBlock() : FunctionPass(ID) {
-    this->flag = true;
   }
   SplitBasicBlock(bool flag) : FunctionPass(ID) {
 
@@ -152,7 +151,7 @@ void SplitBasicBlock::shuffle(std::vector<int> &vec) {
 // ref: https://github.com/rdadolf/clangtool/blob/master/clangtool.cpp
 
 static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
-  PM.add(new SplitBasicBlock());
+  PM.add(new SplitBasicBlock(true));
 }
 // These constructors add our pass to a list of global extensions.
 static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);

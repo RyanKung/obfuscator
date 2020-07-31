@@ -10,7 +10,7 @@ It included passes:
 
 * Flattening: flattening, Call graph flattening (unstable);
 
-* BogusControlFlow: boguscf, inserting bogus control flow (unstable);
+* BogusControlFlow: boguscf, inserting bogus control flow;
 
 * SplitBasicBlock: splitbbl, BasicBlock splitting;
 
