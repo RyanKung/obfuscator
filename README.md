@@ -6,7 +6,7 @@
 This repo is withdrawed from the offical version  [LLVM-4.0](https://github.com/obfuscator-llvm/obfuscator/tree/llvm-4.0), and spelle's [LLVM-9.0.0](https://github.com/spelle/obfuscator/tree/llvm-9.0.0),
 but removed all llvm codes for supporting build outside llvm codetree.
 
-It included passes:
+It contains passes:
 
 * Flattening: flattening, Call graph flattening (unstable);
 
