@@ -35,7 +35,9 @@ struct SplitBasicBlock : public FunctionPass {
   static char ID; // Pass identification, replacement for typeid
   bool flag;
 
-  SplitBasicBlock() : FunctionPass(ID) {}
+  SplitBasicBlock() : FunctionPass(ID) {
+    this->flag = true;
+  }
   SplitBasicBlock(bool flag) : FunctionPass(ID) {
 
     this->flag = flag;

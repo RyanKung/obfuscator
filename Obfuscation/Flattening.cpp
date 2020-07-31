@@ -30,7 +30,9 @@ struct Flattening : public FunctionPass {
   static char ID;  // Pass identification, replacement for typeid
   bool flag;
 
-  Flattening() : FunctionPass(ID) {}
+  Flattening() : FunctionPass(ID) {
+    //  this->flag = true;
+  }
   Flattening(bool flag) : FunctionPass(ID) { this->flag = flag; }
 
   bool runOnFunction(Function &F);

@@ -58,7 +58,27 @@ struct Substitution : public FunctionPass {
   void (Substitution::*funcXor[NUMBER_XOR_SUBST])(BinaryOperator *bo);
   bool flag;
 
-  Substitution() : FunctionPass(ID) {}
+  Substitution() : FunctionPass(ID) {
+    this->flag = true;
+    funcAdd[0] = &Substitution::addNeg;
+    funcAdd[1] = &Substitution::addDoubleNeg;
+    funcAdd[2] = &Substitution::addRand;
+    funcAdd[3] = &Substitution::addRand2;
+
+    funcSub[0] = &Substitution::subNeg;
+    funcSub[1] = &Substitution::subRand;
+    funcSub[2] = &Substitution::subRand2;
+
+    funcAnd[0] = &Substitution::andSubstitution;
+    funcAnd[1] = &Substitution::andSubstitutionRand;
+
+    funcOr[0] = &Substitution::orSubstitution;
+    funcOr[1] = &Substitution::orSubstitutionRand;
+
+    funcXor[0] = &Substitution::xorSubstitution;
+    funcXor[1] = &Substitution::xorSubstitutionRand;
+
+  }
 
   Substitution(bool flag) : FunctionPass(ID) {
     this->flag = flag;
