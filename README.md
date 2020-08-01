@@ -61,8 +61,21 @@ cmake .. & make
 
 # How to use :
 
+## Automatically apply with `clang`
+
 This version of o-llvm pass support autoload: (impl details: https://github.com/rdadolf/clangtool), so just:
 
 ```
-clang -Xclang -load -Xclang <path>/build/Obfuscation/LLVMObfuscation.dylib  -fobjc-arc ./<source>.m
+clang -Xclang -load -Xclang <path>/LLVMObfuscation.dylib  -fobjc-arc ./<source>.m
 ```
+
+It will automatically apply all passes.
+
+## With `opt`
+
+Just try
+```
+opt -load <path>/LLVMObfuscation.dylib --help
+```
+
+You will find avaliable passes list there such as `func_name` and `splitbbl`
