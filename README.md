@@ -79,3 +79,39 @@ opt -load <path>/LLVMObfuscation.dylib --help
 ```
 
 You will find avaliable passes list there such as `func_name` and `splitbbl`
+
+
+## Example
+
+```
+clang -Xclang -load -Xclang \
+	../../build/Obfuscation/LLVMObfuscation.dylib  \
+	-fobjc-arc ./main.m
+Renaming Function: -[Box init]
+Skipping External Function: objc_msgSendSuper2
+Skipping External Function: llvm.objc.storeStrong
+Skipping External Function: llvm.objc.retain
+Renaming Function: -[Box volume]
+Renaming Function: -[Box height]
+Renaming Function: -[Box setHeight:]
+Skipping main
+Skipping External Function: llvm.objc.autoreleasePoolPush
+Skipping External Function: NSLog
+Skipping External Function: objc_alloc_init
+Skipping External Function: objc_msgSend
+Skipping External Function: llvm.objc.autoreleasePoolPop
+Renaming Function: .datadiv_decode6839268405975385304
+Renaming Struct: struct._class_t
+Renaming Struct: struct._objc_cache
+Renaming Struct: struct._class_ro_t
+Renaming Struct: struct.__method_list_t
+Renaming Struct: struct._objc_method
+Renaming Struct: struct._objc_protocol_list
+Renaming Struct: struct._protocol_t
+Renaming Struct: struct._ivar_list_t
+Renaming Struct: struct._ivar_t
+Renaming Struct: struct._prop_list_t
+Renaming Struct: struct._prop_t
+Renaming Struct: struct.__NSConstantString_tag
+Renaming Struct: struct._objc_super
+```
