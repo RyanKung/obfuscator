@@ -1,21 +1,9 @@
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/IR/LegacyPassManager.h"
-#include "llvm/Transforms/IPO/PassManagerBuilder.h"
-#include "llvm/Pass.h"
-#include "llvm/IR/Function.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/SmallString.h"
-#include "llvm/Analysis/TargetLibraryInfo.h"
-#include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/Type.h"
-#include "llvm/IR/TypeFinder.h"
-#include "llvm/Transforms/IPO.h"
-#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Transforms/Obfuscation/FuncNameObf.h"
+
 
 
 // ref: http://mayuyu.io/2017/06/01/LLVMHacking-0x1/
+// ref: https://llvm.org/doxygen/MetaRenamer_8cpp_source.html
 
 using namespace llvm;
 using namespace std;
@@ -37,8 +25,11 @@ namespace llvm {
     }
 
     bool runOnModule(Module &M) override {
-      for(Module::iterator Fun=M.begin();Fun!=M.end();Fun++){
-	Function &F=*Fun;
+      for (auto AI = M.alias_begin(), AE = M.alias_end(); AI != AE; ++AI) {
+	errs()<<"Skipping Alias:"<<AI->getName()<<"\n";
+      }
+
+      for(auto &F: M){
 	if (F.getName().str().compare("main")==0){
 	  errs()<<"Skipping main\n";
 	}
@@ -49,6 +40,18 @@ namespace llvm {
 	}
 	else{
 	  errs()<<"Skipping External Function: "<<F.getName()<<"\n";
+	}
+      }
+      // Rename all struct types
+      TypeFinder StructTypes;
+      StructTypes.run(M, true);
+
+      for (StructType *STy : StructTypes) {
+	if (STy->isLiteral() || STy->getName().empty()) {
+	  errs()<<"Skipping External Struct: "<<STy->getName()<<"\n";
+	} else {
+	  errs()<<"Renaming Struct: "<<STy->getName()<<"\n";
+	  STy->setName(randomString(16));
 	}
       }
       return true;
@@ -63,7 +66,6 @@ static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManage
   PM.add(new FuncNameObfPass());
 }
 
-static RegisterPass<FuncNameObfPass> A("func_name", "Rename Function Name Randomly");
-static RegisterStandardPasses B(PassManagerBuilder::EP_EarlyAsPossible, loadPass);
+static RegisterPass<FuncNameObfPass> A("func_name", "Rename Function Name Randomly", false, false);
 static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
 static RegisterStandardPasses D(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);
