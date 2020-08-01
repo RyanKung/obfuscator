@@ -10,13 +10,15 @@ The difference between this impl and the origin is, LLVMObfusPass is a autoload 
 
 It contains passes:
 
-* Flattening: flattening, Call graph flattening (unstable);
+* Flattening(Origin): flattening, Call graph flattening (unstable);
 
-* BogusControlFlow: boguscf, inserting bogus control flow;
+* BogusControlFlow(Origin): boguscf, inserting bogus control flow;
 
-* SplitBasicBlock: splitbbl, BasicBlock splitting;
+* SplitBasicBlock(Origin): splitbbl, BasicBlock splitting;
 
-* StringObfuscationPass GVDiv, Global variable (i.e., const char*) diversification pass;
+* StringObfuscationPass(Origin): GVDiv, Global variable (i.e., const char*) diversification pass;
+
+* FunctionNameObfPass(New Feature): func_name, Rename Function Name Randomly"
 
 
 Please have a look at the [wiki](https://github.com/obfuscator-llvm/obfuscator/wiki)!
