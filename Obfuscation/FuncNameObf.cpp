@@ -66,6 +66,6 @@ static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManage
   PM.add(new FuncNameObfPass());
 }
 
-static RegisterPass<FuncNameObfPass> A("func_name", "Rename Function Name Randomly", false, false);
+static RegisterPass<FuncNameObfPass> A("func_name", "Rename Function&Struct Name Randomly", false, false);
 static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
 static RegisterStandardPasses D(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);
