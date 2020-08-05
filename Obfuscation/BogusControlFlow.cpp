@@ -381,6 +381,8 @@ namespace {
         if(i->isBinaryOp()){ // binary instructions
           unsigned opcode = i->getOpcode();
           BinaryOperator *op, *op1 = NULL;
+          UnaryOperator *uop, *uop1 = NULL;
+
           Twine *var = new Twine("_");
           // treat differently float or int
           // Binary int
@@ -396,7 +398,7 @@ namespace {
 	      case 0: //do nothing
 		break;
 	      case 1: op = BinaryOperator::CreateNeg(i->getOperand(0),*var,&*i);
-		op1 = BinaryOperator::Create(Instruction::Add,op,
+		op1 = BinaryOperator::Create(Instruction::Add, op,
 					     i->getOperand(1),"gen",&*i);
 		break;
 	      case 2: op1 = BinaryOperator::Create(Instruction::Sub,
@@ -420,8 +422,8 @@ namespace {
               switch(llvm::cryptoutils->get_range(3)){ // can be improved
 	      case 0: //do nothing
 		break;
-	      case 1: op = BinaryOperator::CreateFNeg(i->getOperand(0),*var,&*i);
-		op1 = BinaryOperator::Create(Instruction::FAdd,op,
+	      case 1: uop = UnaryOperator::CreateFNeg(i->getOperand(0),*var,&*i);
+		op1 = BinaryOperator::Create(Instruction::FAdd, uop,
 					     i->getOperand(1),"gen",&*i);
 		break;
 	      case 2: op = BinaryOperator::Create(Instruction::FSub,
@@ -570,8 +572,8 @@ namespace {
       // Replacing all the branches we found
       for(std::vector<Instruction*>::iterator i =toEdit.begin();i!=toEdit.end();++i){
         //if y < 10 || x*(x+1) % 2 == 0
-        opX = new LoadInst ((Value *)x, "", (*i));
-        opY = new LoadInst ((Value *)y, "", (*i));
+        opX = new LoadInst (x->getType(), (Value *)x, "", (*i));
+        opY = new LoadInst (y->getType(), (Value *)y, "", (*i));
 
         op = BinaryOperator::Create(Instruction::Sub, (Value *)opX,
 				    ConstantInt::get(Type::getInt32Ty(M.getContext()), 1,

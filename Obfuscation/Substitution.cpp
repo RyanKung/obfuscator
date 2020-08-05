@@ -241,25 +241,26 @@ void Substitution::addNeg(BinaryOperator *bo) {
 
 // Implementation of a = -(-b + (-c))
 void Substitution::addDoubleNeg(BinaryOperator *bo) {
-  BinaryOperator *op, *op2 = NULL;
+  BinaryOperator *bop, *bop2 = NULL;
+  UnaryOperator *uop, *uop2 = NULL;
+
 
   if (bo->getOpcode() == Instruction::Add) {
-    op = BinaryOperator::CreateNeg(bo->getOperand(0), "", bo);
-    op2 = BinaryOperator::CreateNeg(bo->getOperand(1), "", bo);
-    op = BinaryOperator::Create(Instruction::Add, op, op2, "", bo);
-    op = BinaryOperator::CreateNeg(op, "", bo);
-
+    bop = BinaryOperator::CreateNeg(bo->getOperand(0), "", bo);
+    bop2 = BinaryOperator::CreateNeg(bo->getOperand(1), "", bo);
+    bop = BinaryOperator::Create(Instruction::Add, bop, bop2, "", bo);
+    bop = BinaryOperator::CreateNeg(bop, "", bo);
+    bo->replaceAllUsesWith(bop);
     // Check signed wrap
     //op->setHasNoSignedWrap(bo->hasNoSignedWrap());
     //op->setHasNoUnsignedWrap(bo->hasNoUnsignedWrap());
   } else {
-    op = BinaryOperator::CreateFNeg(bo->getOperand(0), "", bo);
-    op2 = BinaryOperator::CreateFNeg(bo->getOperand(1), "", bo);
-    op = BinaryOperator::Create(Instruction::FAdd, op, op2, "", bo);
-    op = BinaryOperator::CreateFNeg(op, "", bo);
+    uop = UnaryOperator::CreateFNeg(bo->getOperand(0), "", bo);
+    uop2 = UnaryOperator::CreateFNeg(bo->getOperand(1), "", bo);
+    bop = BinaryOperator::Create(Instruction::FAdd, uop, uop2, "", bo);
+    uop = UnaryOperator::CreateFNeg(bop, "", bo);
+    bo->replaceAllUsesWith(uop);
   }
-
-  bo->replaceAllUsesWith(op);
 }
 
 // Implementation of  r = rand (); a = b + r; a = a + c; a = a - r
@@ -325,6 +326,8 @@ void Substitution::addRand2(BinaryOperator *bo) {
 // Implementation of a = b + (-c)
 void Substitution::subNeg(BinaryOperator *bo) {
   BinaryOperator *op = NULL;
+  UnaryOperator *uop = NULL;
+
 
   if (bo->getOpcode() == Instruction::Sub) {
     op = BinaryOperator::CreateNeg(bo->getOperand(1), "", bo);
@@ -335,7 +338,7 @@ void Substitution::subNeg(BinaryOperator *bo) {
     //op->setHasNoSignedWrap(bo->hasNoSignedWrap());
     //op->setHasNoUnsignedWrap(bo->hasNoUnsignedWrap());
   } else {
-    op = BinaryOperator::CreateFNeg(bo->getOperand(1), "", bo);
+    uop = UnaryOperator::CreateFNeg(bo->getOperand(1), "", bo);
     op = BinaryOperator::Create(Instruction::FAdd, bo->getOperand(0), op, "",
                                 bo);
   }
