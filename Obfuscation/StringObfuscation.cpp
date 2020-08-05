@@ -4,21 +4,20 @@
 #include <strstream>
 
 #include "llvm/Support/Debug.h"
-#include "llvm/Config/llvm-config.h"
 #include "llvm/Support/Alignment.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Value.h"
+#include "llvm/IR/AbstractCallSite.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Obfuscation/CryptoUtils.h"
 #include "llvm/Transforms/Obfuscation/StringObfuscation.h"
 #include "llvm/IR/LegacyPassManager.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
-#include "llvm/IR/AbstractCallSite.h"
-
 
 using namespace llvm;
 
@@ -62,7 +61,7 @@ namespace llvm {
       while (gi != ge) {
 	GlobalVariable* gv = &(*gi);
 	DEBUG_WITH_TYPE(DEBUG_TYPE, dbgs() << __PRETTY_FUNCTION__ << ": Global var " << gv->getName() << '\n' );
-	std::string section = gv->getSection();
+          std::string section = (gv->getSection()).str();
 	Type * gv_type = gv->getValueType();
 	DEBUG_WITH_TYPE(DEBUG_TYPE,
 			dbgs() << __PRETTY_FUNCTION__ << ": Global variable "
@@ -119,7 +118,7 @@ namespace llvm {
 
 	    ++GlobalsEncoded;
 
-	    std::string gv_name = gv->getName() ;
+          std::string gv_name = (gv->getName()).str();
 
 	    gv->setName(gv_name + "_old" ) ;
 
@@ -323,7 +322,7 @@ namespace llvm {
 	  CastInst* int64_idxprom = new ZExtInst(int32_i,
 						 IntegerType::get(mod->getContext(), 64), "idxprom",
 						 label_for_body);
-	  LoadInst* ptr_19 = new LoadInst(gvar, "", false,
+	  LoadInst* ptr_19 = new LoadInst(gvar->getType()->getPointerElementType(),gvar, "", false,
 					  label_for_body);
 	  ptr_19->setAlignment(Align(8));
 
@@ -336,7 +335,7 @@ namespace llvm {
 	  Instruction* ptr_arrayidx = GetElementPtrInst::Create(NULL,
 								gvar, ref_ptr_32_indices, "arrayidx", label_for_body);
 	  // Load
-	  LoadInst* int8_20 = new LoadInst(ptr_arrayidx, "", false,
+        LoadInst* int8_20 = new LoadInst(ptr_arrayidx->getType(),ptr_arrayidx, "", false,
 					   label_for_body);
 	  DEBUG_WITH_TYPE(DEBUG_TYPE, dbgs() << __PRETTY_FUNCTION__ << ": int8_20 : " << int8_20->getOpcodeName() << '\n' );
 	  DEBUG_WITH_TYPE(DEBUG_TYPE, dbgs() << __PRETTY_FUNCTION__ << ": int8_20 : " << int8_20->getName() << '\n' );
