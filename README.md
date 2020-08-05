@@ -12,7 +12,7 @@ It contains passes:
 
 * Flattening(Origin): flattening, Call graph flattening (unstable);
 
-* BogusControlFlow(Origin): boguscf, inserting bogus control flow;
+* BogusControlFlow(Origin): boguscf, inserting bogus control flow (unstable);
 
 * SplitBasicBlock(Origin): splitbbl, BasicBlock splitting;
 
