@@ -328,7 +328,7 @@ namespace llvm {
 	  CastInst* int64_idxprom = new ZExtInst(int32_i,
 						 IntegerType::get(mod->getContext(), 64), "idxprom",
 						 label_for_body);
-	  LoadInst* ptr_19 = new LoadInst(gvar->getType()->getPointerElementType(),gvar, "", false,
+	  LoadInst* ptr_19 = new LoadInst(gvar->getType(), gvar, "", false,
 					  label_for_body);
 	  ptr_19->setAlignment(Align(8));
 
@@ -341,7 +341,7 @@ namespace llvm {
 	  Instruction* ptr_arrayidx = GetElementPtrInst::Create(NULL,
 								gvar, ref_ptr_32_indices, "arrayidx", label_for_body);
 	  // Load
-        LoadInst* int8_20 = new LoadInst(ptr_arrayidx->getType(),ptr_arrayidx, "", false,
+        LoadInst* int8_20 = new LoadInst(ptr_arrayidx->getType(), ptr_arrayidx, "", false,
 					   label_for_body);
 	  DEBUG_WITH_TYPE(DEBUG_TYPE, dbgs() << __PRETTY_FUNCTION__ << ": int8_20 : " << int8_20->getOpcodeName() << '\n' );
 	  DEBUG_WITH_TYPE(DEBUG_TYPE, dbgs() << __PRETTY_FUNCTION__ << ": int8_20 : " << int8_20->getName() << '\n' );

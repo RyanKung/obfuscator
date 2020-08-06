@@ -1,8 +1,8 @@
 obf_build:
-	clang -Xclang -load -Xclang \
+	${CC} -Xclang -load -Xclang \
 	../../build/Obfuscation/LLVMObfuscation.dylib  \
-	-fobjc-arc ./main.m
-
+	 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
+	-fobjc-arc ./main.m \
 build:
-	clang \
+	${CC} \
 	-fobjc-arc ./main.m

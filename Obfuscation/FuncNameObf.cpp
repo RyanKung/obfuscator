@@ -13,7 +13,12 @@ static string obfcharacters="qwertyuiopasdfghjklzxcvbnm1234567890";
 namespace llvm {
   struct FuncNameObfPass : public ModulePass {
     static char ID;
+    bool is_flag = false;
     FuncNameObfPass() : ModulePass(ID) {}
+    FuncNameObfPass(bool flag):
+      ModulePass(ID) {
+      is_flag = flag;
+    }
 
     string randomString(int length){
       string name;
@@ -25,6 +30,10 @@ namespace llvm {
     }
 
     bool runOnModule(Module &M) override {
+      if (!is_flag)
+	return false;
+      string _name;
+
       for (auto AI = M.alias_begin(), AE = M.alias_end(); AI != AE; ++AI) {
 	errs()<<"Skipping Alias:"<<AI->getName()<<"\n";
       }
@@ -35,7 +44,8 @@ namespace llvm {
 	}
 	else if(F.empty()==false){
 	  //Rename
-	  errs()<<"Renaming Function: "<<F.getName()<<"\n";
+	  _name = randomString(16);
+	  errs()<<"Renaming Function: "<<F.getName()<<" to: "<<_name<<"\n";
 	  F.setName(randomString(16));
 	}
 	else{
@@ -50,7 +60,8 @@ namespace llvm {
 	if (STy->isLiteral() || STy->getName().empty()) {
 	  errs()<<"Skipping External Struct: "<<STy->getName()<<"\n";
 	} else {
-	  errs()<<"Renaming Struct: "<<STy->getName()<<"\n";
+	  _name = randomString(16);
+	  errs()<<"Renaming Struct: "<<STy->getName()<<" to: "<<_name<<"\n";
 	  STy->setName(randomString(16));
 	}
       }
@@ -63,7 +74,7 @@ char FuncNameObfPass::ID = 0;
 // ref: https://github.com/rdadolf/clangtool/blob/master/clangtool.cpp
 
 static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
-  PM.add(new FuncNameObfPass());
+  PM.add(new FuncNameObfPass(true));
 }
 
 static RegisterPass<FuncNameObfPass> A("func_name", "Rename Function&Struct Name Randomly", false, false);
