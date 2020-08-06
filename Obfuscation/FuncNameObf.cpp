@@ -1,6 +1,7 @@
 #include "llvm/Transforms/Obfuscation/FuncNameObf.h"
+#include "llvm/Transforms/Obfuscation/macros.h"
 
-
+#define DEBUG_TYPE "funcobf"
 
 // ref: http://mayuyu.io/2017/06/01/LLVMHacking-0x1/
 // ref: https://llvm.org/doxygen/MetaRenamer_8cpp_source.html
@@ -35,21 +36,21 @@ namespace llvm {
       string _name;
 
       for (auto AI = M.alias_begin(), AE = M.alias_end(); AI != AE; ++AI) {
-	errs()<<"Skipping Alias:"<<AI->getName()<<"\n";
+	DEBUG_OUT("Skipping Alias:"<<AI->getName());
       }
 
       for(auto &F: M){
 	if (F.getName().str().compare("main")==0){
-	  errs()<<"Skipping main\n";
+	  DEBUG_OUT("Skipping main");
 	}
 	else if(F.empty()==false){
 	  //Rename
 	  _name = randomString(16);
-	  errs()<<"Renaming Function: "<<F.getName()<<" to: "<<_name<<"\n";
+	  DEBUG_OUT("Renaming Function: "<<F.getName()<<" to: "<<_name);
 	  F.setName(randomString(16));
 	}
 	else{
-	  errs()<<"Skipping External Function: "<<F.getName()<<"\n";
+	  DEBUG_OUT("Skipping External Function: "<<F.getName());
 	}
       }
       // Rename all struct types
@@ -58,10 +59,10 @@ namespace llvm {
 
       for (StructType *STy : StructTypes) {
 	if (STy->isLiteral() || STy->getName().empty()) {
-	  errs()<<"Skipping External Struct: "<<STy->getName()<<"\n";
+	  DEBUG_OUT("Skipping External Struct: "<<STy->getName());
 	} else {
 	  _name = randomString(16);
-	  errs()<<"Renaming Struct: "<<STy->getName()<<" to: "<<_name<<"\n";
+	  DEBUG_OUT("Renaming Struct: "<<STy->getName()<<" to: "<<_name);
 	  STy->setName(randomString(16));
 	}
       }
@@ -71,12 +72,9 @@ namespace llvm {
 }
 
 char FuncNameObfPass::ID = 0;
-// ref: https://github.com/rdadolf/clangtool/blob/master/clangtool.cpp
-
 static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
   PM.add(new FuncNameObfPass(true));
 }
-
 static RegisterPass<FuncNameObfPass> A("func_name", "Rename Function&Struct Name Randomly", false, false);
 static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
 static RegisterStandardPasses D(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);
