@@ -73,7 +73,11 @@ namespace llvm {
 
 char FuncNameObfPass::ID = 0;
 static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
-  PM.add(new FuncNameObfPass(true));
+#ifdef FUNCPASS
+  PM.add(new FuncNameObfPass(FUNCPASS));
+#else
+   PM.add(new FuncNameObfPass(false));
+#endif
 }
 static RegisterPass<FuncNameObfPass> A("func_name", "Rename Function&Struct Name Randomly", false, false);
 static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);

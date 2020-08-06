@@ -633,7 +633,11 @@ Pass *llvm::createBogus(bool flag) {
 // ref: https://github.com/rdadolf/clangtool/blob/master/clangtool.cpp
 
 static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
+#ifdef BOGUSPASS
+  PM.add(new BogusControlFlow(BOGUSPASS));
+#else
   PM.add(new BogusControlFlow(false));
+#endif
 }
 // These constructors add our pass to a list of global extensions.
 static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);

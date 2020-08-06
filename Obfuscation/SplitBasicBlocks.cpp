@@ -151,7 +151,11 @@ void SplitBasicBlock::shuffle(std::vector<int> &vec) {
 // ref: https://github.com/rdadolf/clangtool/blob/master/clangtool.cpp
 
 static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
-  PM.add(new SplitBasicBlock(true));
+#ifdef SPLITPASS
+  PM.add(new SplitBasicBlock(SPLITPASS));
+#else
+  PM.add(new SplitBasicBlock(false));
+#endif
 }
 // These constructors add our pass to a list of global extensions.
 static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);

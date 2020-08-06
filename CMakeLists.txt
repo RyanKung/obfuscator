@@ -27,12 +27,20 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 add_definitions(${LLVM_DEFINITIONS})
+
+add_definitions(-DFUNCPASS=true)
+add_definitions(-DSPLITPASS=true)
+add_definitions(-DSTRINGPASS=false)
+add_definitions(-DBOGUSPASS=false)
+add_definitions(-DFLATPASS=false)
+
+
+
+add_definitions(-DDEBUG=false)
+
 include_directories(${LLVM_INCLUDE_DIRS})
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
 
 # CMake Modules used for llvm specific macros
-include(LLVM-Config)
-include(HandleLLVMOptions)
-include(AddLLVM)
 include_directories(include/)
 add_subdirectory(Obfuscation)

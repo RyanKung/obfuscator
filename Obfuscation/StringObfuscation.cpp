@@ -407,7 +407,7 @@ namespace llvm {
 
 char StringObfuscationPass::ID = 0;
 static RegisterPass<StringObfuscationPass> X("GVDiv",
-					     "Global variable (i.e., const char*) diversification pass");
+					     "Global variable (i.e., const char*) diversification Pass");
 
 Pass * llvm::createStringObfuscation(bool flag) {
   return new StringObfuscationPass(flag);
@@ -416,7 +416,11 @@ Pass * llvm::createStringObfuscation(bool flag) {
 // ref: https://github.com/rdadolf/clangtool/blob/master/clangtool.cpp
 
 static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
+#ifdef STRINGPASS
+  PM.add(new StringObfuscationPass(STRINGPASS));
+#else
   PM.add(new StringObfuscationPass(false));
+#endif
 }
 // These constructors add our pass to a list of global extensions.
 static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);

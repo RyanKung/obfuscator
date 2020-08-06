@@ -248,7 +248,11 @@ bool Flattening::flatten(Function *f) {
 
 
 static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
-  PM.add(new Flattening(false));
+#ifdef FLATPASS
+  PM.add(new Flattening(FLATPASS));
+#else
+  PM.add(new Flattening(true));
+#endif
 }
 // These constructors add our pass to a list of global extensions.
 static RegisterStandardPasses clangtoolLoader_Ox(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
