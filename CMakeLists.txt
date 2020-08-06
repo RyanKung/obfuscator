@@ -28,14 +28,14 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 add_definitions(${LLVM_DEFINITIONS})
 
+# Feature Control: Which pass should be autoload by default
 add_definitions(-DFUNCPASS=true)
 add_definitions(-DSPLITPASS=true)
 add_definitions(-DSTRINGPASS=false)
 add_definitions(-DBOGUSPASS=false)
 add_definitions(-DFLATPASS=false)
 
-
-
+# Feature Control: Build with Debug msg output
 add_definitions(-DDEBUG=false)
 
 include_directories(${LLVM_INCLUDE_DIRS})
