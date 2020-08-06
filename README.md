@@ -16,7 +16,7 @@ It contains passes:
 
 * SplitBasicBlock(Origin): splitbbl, BasicBlock splitting;
 
-* StringObfuscationPass(Origin): GVDiv, Global variable (i.e., const char*) diversification pass;
+* StringObfuscationPass(Origin): GVDiv, Global variable (i.e., const char*) diversification pass(unstable);
 
 * FunctionNameObfPass(New Feature): func_name, Rename Function Name Randomly"
 
