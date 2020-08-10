@@ -115,3 +115,21 @@ Renaming Struct: struct._prop_t
 Renaming Struct: struct.__NSConstantString_tag
 Renaming Struct: struct._objc_super
 ```
+
+# How to Debug
+
+1. If you got segmentfalut or other wired errors, it may caused by LLVM Pass sequence.
+
+Check the document: https://llvm.org/doxygen/classllvm_1_1PassManagerBuilder.html#a575d14758794b0997be4f8edcef7dc91
+
+2. Debug with LLVM IR:
+
+Turn on debug flag on `cmake` file, and try command like this
+
+```
+	${CC} -Xclang -load -Xclang \
+	../../build/Obfuscation/LLVMObfuscation.dylib  \
+	./main.m -S -o /dev/stdout
+```
+
+You can use toolset like `diff` to find out how the pass modified origin IR
