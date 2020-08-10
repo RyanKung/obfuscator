@@ -31,6 +31,8 @@
 #include "llvm/Transforms/IPO.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/Support/Casting.h"
 
 using namespace std;
 using namespace llvm;

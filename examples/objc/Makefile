@@ -2,7 +2,6 @@ obf_build:
 	${CC} -Xclang -load -Xclang \
 	../../build/Obfuscation/LLVMObfuscation.dylib  \
 	 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
-	--debug=funcobf \
 	-fobjc-arc ./main.m \
 
 build:
