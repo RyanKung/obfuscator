@@ -30,7 +30,7 @@ add_definitions(${LLVM_DEFINITIONS})
 
 # Feature Control: Which pass should be autoload by default
 add_definitions(-DFUNCPASS=true)
-add_definitions(-DSPLITPASS=true)
+add_definitions(-DSPLITPASS=false)
 add_definitions(-DSTRINGPASS=false)
 add_definitions(-DBOGUSPASS=false)
 add_definitions(-DFLATPASS=false)
