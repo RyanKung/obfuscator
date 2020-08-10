@@ -15,7 +15,7 @@ static string obfcharacters="qwertyuiopasdfghjklzxcvbnm1234567890";
 namespace llvm {
   struct FuncNameObfPass : public ModulePass {
     static char ID;
-    bool is_flag = false;
+    bool is_flag = true;
     FuncNameObfPass() : ModulePass(ID) {}
     FuncNameObfPass(bool flag):
       ModulePass(ID) {
@@ -105,6 +105,10 @@ static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManage
    PM.add(new FuncNameObfPass(false));
 #endif
 }
-static RegisterPass<FuncNameObfPass> A("func_name", "Rename Function&Struct Name Randomly", true, true);
-static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
+ ModulePass *llvm::createFuncNameObfPass() {
+   return new FuncNameObfPass();
+ }
+static RegisterPass<FuncNameObfPass> A("func_name", "Rename Function&Struct Name Randomly", false, false);
+//static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
+static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_ModuleOptimizerEarly, loadPass);
 static RegisterStandardPasses D(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);
