@@ -1,9 +1,15 @@
 obf:
-	${CC} -Xclang \
+	${CXX} -Xclang \
 	-load -Xclang \
 	../../build/Obfuscation/LLVMObfuscation.dylib \
 	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
-	-fobjc-arc ./main.m
+	./main.cpp
+
+noobf:
+	${CXX} -std=c++14 \
+	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
+	./main.cpp
+
 
 asm:
 	${CC} -Xclang \
@@ -23,7 +29,7 @@ build:
 ir:
 	${CC} -S -emit-llvm \
 	 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
-	./main.m \
+	./main.cpp \
 	-o main.ll
 
 debug:

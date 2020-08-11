@@ -41,43 +41,38 @@ namespace llvm {
       }
 
       for(auto &F: M){
-	if (F.getName().str().compare("main")==0){
-	  DEBUG_OUT("Skipping main");
+	StringRef Name = F.getName();
+	LibFunc Tmp;
+	if ((!Name.empty() && Name[0] == 1) ||
+	    getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(F).getLibFunc(F, Tmp)) {
+	  DEBUG_OUT("Skipping External Function: "<<F.getName());
+	  continue;
 	}
-	else if(F.empty()==false){
-	  //Rename
+
+	if (Name != "main"){
 	  _name = randomString(16);
 	  DEBUG_OUT("Renaming Function: "<<F.getName()<<" to: "<<_name);
-	  F.setName(_name);
-	}
-	else{
-	  DEBUG_OUT("Skipping External Function: "<<F.getName());
+	  //	  F.setName(_name);
+	} else {
+	  DEBUG_OUT("Skipping main");
+	  continue;
 	}
       }
       // Rename all struct types
       TypeFinder StructTypes;
       StructTypes.run(M, true);
 
-      for (StructType *STy : StructTypes) {
-	if (STy->isLiteral() || STy->getName().empty()) {
-	  DEBUG_OUT("Skipping External Struct: "<<STy->getName());
-	} else {
-	  _name = randomString(16);
-	  DEBUG_OUT("Renaming Struct: "<<STy->getName()<<" to: "<<_name);
-	  STy->setName(_name);
-	}
-      }
-
-      for(auto G=M.global_begin(); G!=M.global_end(); G++) {
-        GlobalVariable &GV=*G;
-        if (GV.getName().str().find("OBJC_CLASSLIST_REFERENCES") == 0) {
-	  if(GV.hasInitializer()) {
-	    _name = randomString(16);
-	    GV.getInitializer()->setName(randomString(16));
-	    DEBUG_OUT("Renaming Struct: "<<GV.getInitializer()->getName()<<" to: "<<_name);
-	  }
-        }
-      }
+      // for(auto G=M.global_begin(); G!=M.global_end(); G++) {
+      //   GlobalVariable &GV=*G;
+      // 	DEBUG_OUT(GV.getName());
+      //   if (GV.getName().str().find("OBJC_CLASSLIST_REFERENCES") == 0) {
+      // 	  if(GV.hasInitializer()) {
+      // 	    _name = randomString(16);
+      // 	    GV.getInitializer()->setName(randomString(16));
+      // 	    DEBUG_OUT("Renaming Struct: "<<GV.getInitializer()->getName()<<" to: "<<_name);
+      // 	  }
+      //   }
+      // }
       return true;
     }
   };
@@ -95,6 +90,6 @@ static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManage
    return new FuncNameObfPass();
  }
 static RegisterPass<FuncNameObfPass> A("func_name", "Rename Function&Struct Name Randomly", false, false);
-static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
-//static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_ModuleOptimizerEarly, loadPass);
+//static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
+static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_ModuleOptimizerEarly, loadPass);
 static RegisterStandardPasses D(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);
