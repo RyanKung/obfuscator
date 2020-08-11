@@ -10,9 +10,9 @@ asm:
 	-load -Xclang \
 	../../build/Obfuscation/LLVMObfuscation.dylib \
 	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
-	-fobjc-arc -S ./main.m -o /dev/stdout
+	-fobjc-arc -S ./main.m -o obf.bc
 
-
+bc:
 	${CC}  \
 	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
 	-fobjc-arc ./obf.bc -o a.out

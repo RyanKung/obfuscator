@@ -1,5 +1,7 @@
 #include "llvm/Transforms/Obfuscation/FuncNameObf.h"
 #include "llvm/Transforms/Obfuscation/macros.h"
+#include "llvm/support/typename.h"
+
 
 #define DEBUG_TYPE "funcobf"
 
@@ -64,15 +66,7 @@ namespace llvm {
 	  StringRef fnName = getObfName(16);
 	  auto originName = F.getName();
 	  F.setName(fnName);
-	  //	  F.setName(fnName);
-	  // ValueToValueMapTy vMap;
-	  // auto *clone = llvm::CloneFunction(&F, vMap);
-	  // clone->setLinkage(GlobalValue::InternalLinkage);
-	  // clone->setName(fnName);
 	  DEBUG_OUT("Renaming Function: `"<< originName.str() << "` to: "<<fnName);
-	  // F.getParent() -> getFunctionList().push_back(clone);
-	  // F.replaceAllUsesWith(clone);
-	  // F.eraseFromParent();
 	} else {
 	  continue;
 	}
@@ -81,17 +75,30 @@ namespace llvm {
       TypeFinder StructTypes;
       StructTypes.run(M, true);
 
-      // for(auto G=M.global_begin(); G!=M.global_end(); G++) {
-      //   GlobalVariable &GV=*G;
-      // 	DEBUG_OUT(GV.getName());
-      //   if (GV.getName().str().find("OBJC_CLASSLIST_REFERENCES") == 0) {
-      // 	  if(GV.hasInitializer()) {
-      // 	    _name = getObfName(16);
-      // 	    GV.getInitializer()->setName(getObfName(16));
-      // 	    DEBUG_OUT("Renaming Struct: "<<GV.getInitializer()->getName()<<" to: "<<_name);
-      // 	  }
-      //   }
-      // }
+
+      for(auto G=M.global_begin(); G!=M.global_end(); G++) {
+        GlobalVariable &GV=*G;
+	if (GV.isDeclaration()) {
+	  DEBUG_OUT("Skipping External Varable: "<< GV.getName());
+	  continue;
+	}
+	if(GV.getName().str().find("OBJC_METH_VAR_NAME_") == 0) {
+	  DEBUG_OUT("Link: " << GV.getName());
+	  // SHT_LLVM_LINKER_OPTIONS
+	  DEBUG_OUT("Link: " << GV.getValueName());
+
+	}
+	_name = getObfName(16);
+	GV.getInitializer()->setName(_name);
+	DEBUG_OUT("Renaming Varable: "<<GV.getName()<<" to: "<<_name);
+	GV.setName(_name);
+
+	if(GV.hasInitializer()) {
+	  _name = getObfName(16);
+	  GV.getInitializer()->setName(_name);
+	  DEBUG_OUT("Renaming Class: "<<GV.getInitializer()->getName()<<" to: "<<_name);
+        }
+      }
       return true;
     }
     void getAnalysisUsage(AnalysisUsage &AU) const {
