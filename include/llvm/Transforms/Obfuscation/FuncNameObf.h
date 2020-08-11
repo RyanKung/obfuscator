@@ -33,6 +33,9 @@
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/ADT/Triple.h"
+#include "llvm/Transforms/Obfuscation/Utils.h"
+#include "llvm/IR/AbstractCallSite.h"
 
 using namespace std;
 using namespace llvm;

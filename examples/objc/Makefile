@@ -1,10 +1,18 @@
-obf_build:
+obf:
+	${CC} -Xclang -load -Xclang \
+	../../build/Obfuscation/LLVMObfuscation.dylib  \
+	 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
+	-fobjc-arc ./main.m
+
+asm:
 	${CC} -Xclang -load -Xclang \
 	../../build/Obfuscation/LLVMObfuscation.dylib  \
 	 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
 	-fobjc-arc ./main.m -S -o /dev/stdout
 
-asm:
+
+
+build_asm:
 	${CC}  \
 	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
 	-fobjc-arc ./obf.bc -o a.out

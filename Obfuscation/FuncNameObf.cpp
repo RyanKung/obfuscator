@@ -10,6 +10,9 @@
 using namespace llvm;
 using namespace std;
 
+static const int DARWIN_FLAG = 0x2 | 0x8;
+static const int ANDROID64_FLAG = 0x00002 | 0x100;
+static const int ANDROID32_FLAG = 0x0000 | 0x2;
 static string obfcharacters="qwertyuiopasdfghjklzxcvbnm1234567890";
 
 namespace llvm {
@@ -31,43 +34,174 @@ namespace llvm {
       return name;
     }
 
+    virtual bool doInitialization(Module &M) override {
+      Triple tri(M.getTargetTriple());
+      if (tri.getVendor() != Triple::VendorType::Apple) {
+	return false;
+      }
+      Type *Int64Ty = Type::getInt64Ty(M.getContext());
+      Type *Int32Ty = Type::getInt32Ty(M.getContext());
+      Type *Int8PtrTy = Type::getInt8PtrTy(M.getContext());
+      Type *Int8Ty = Type::getInt8Ty(M.getContext());
+      // Generic ObjC Runtime Declarations
+      FunctionType *IMPType =
+        FunctionType::get(Int8PtrTy, {Int8PtrTy, Int8PtrTy}, true);
+      PointerType *IMPPointerType = PointerType::get(IMPType, 0);
+      vector<Type *> classReplaceMethodTypeArgs;
+      classReplaceMethodTypeArgs.push_back(Int8PtrTy);
+      classReplaceMethodTypeArgs.push_back(Int8PtrTy);
+      classReplaceMethodTypeArgs.push_back(IMPPointerType);
+      classReplaceMethodTypeArgs.push_back(Int8PtrTy);
+      FunctionType *class_replaceMethod_type =
+        FunctionType::get(IMPPointerType, classReplaceMethodTypeArgs, false);
+      M.getOrInsertFunction("class_replaceMethod", class_replaceMethod_type);
+      FunctionType *sel_registerName_type =
+        FunctionType::get(Int8PtrTy, {Int8PtrTy}, false);
+      M.getOrInsertFunction("sel_registerName", sel_registerName_type);
+      FunctionType *objc_getClass_type =
+        FunctionType::get(Int8PtrTy, {Int8PtrTy}, false);
+      M.getOrInsertFunction("objc_getClass", objc_getClass_type);
+      M.getOrInsertFunction("objc_getMetaClass", objc_getClass_type);
+      StructType *objc_property_attribute_t_type =
+	reinterpret_cast<StructType *>
+	(M.getTypeByName("struct.objc_property_attribute_t"));
+      if (objc_property_attribute_t_type == NULL) {
+	vector<Type *> types;
+	types.push_back(Int8PtrTy);
+	types.push_back(Int8PtrTy);
+	objc_property_attribute_t_type =
+	  StructType::create(ArrayRef<Type *>(types), "struct.objc_property_attribute_t");
+	M.getOrInsertGlobal("struct.objc_property_attribute_t",
+			    objc_property_attribute_t_type);
+      }
+      vector<Type *> allocaClsTypeVector;
+      vector<Type *> addIvarTypeVector;
+      vector<Type *> addPropTypeVector;
+      allocaClsTypeVector.push_back(Int8PtrTy);
+      allocaClsTypeVector.push_back(Int8PtrTy);
+      addIvarTypeVector.push_back(Int8PtrTy);
+      addIvarTypeVector.push_back(Int8PtrTy);
+      addPropTypeVector.push_back(Int8PtrTy);
+      addPropTypeVector.push_back(Int8PtrTy);
+      addPropTypeVector.push_back(objc_property_attribute_t_type->getPointerTo());
+      if (tri.isArch64Bit()) {
+	// We are 64Bit Device
+	allocaClsTypeVector.push_back(Int64Ty);
+	addIvarTypeVector.push_back(Int64Ty);
+	addPropTypeVector.push_back(Int64Ty);
+      } else {
+	// Not 64Bit.However we are still on apple platform.So We are
+	// ARMV7/ARMV7S/i386
+	// PowerPC is ignored, feel free to open a PR if you want to
+	allocaClsTypeVector.push_back(Int32Ty);
+	addIvarTypeVector.push_back(Int32Ty);
+	addPropTypeVector.push_back(Int32Ty);
+      }
+      addIvarTypeVector.push_back(Int8Ty);
+      addIvarTypeVector.push_back(Int8PtrTy);
+      // Types Collected. Now Inject Functions
+      FunctionType *addIvarType =
+        FunctionType::get(Int8Ty, ArrayRef<Type *>(addIvarTypeVector), false);
+      M.getOrInsertFunction("class_addIvar", addIvarType);
+      FunctionType *addPropType =
+        FunctionType::get(Int8Ty, ArrayRef<Type *>(addPropTypeVector), false);
+      M.getOrInsertFunction("class_addProperty", addPropType);
+      FunctionType *class_getName_Type =
+        FunctionType::get(Int8PtrTy, {Int8PtrTy}, false);
+      M.getOrInsertFunction("class_getName", class_getName_Type);
+      FunctionType *objc_getMetaClass_Type =
+        FunctionType::get(Int8PtrTy, {Int8PtrTy}, false);
+      M.getOrInsertFunction("objc_getMetaClass", objc_getMetaClass_Type);
+
+      FunctionType *dlopen_type =
+	FunctionType::get(
+			  Int8PtrTy, {Int8PtrTy, Int32Ty},
+			  false); // int has a length of 32 on both 32/64bit platform
+
+      FunctionType *dlsym_type =
+        FunctionType::get(Int8PtrTy, {Int8PtrTy, Int8PtrTy}, false);
+      M.getOrInsertFunction("dlopen", dlopen_type);
+      M.getOrInsertFunction("dlsym", dlsym_type);
+
+      return true;
+    }
+
     bool runOnModule(Module &M) override {
       if (!is_flag)
 	return false;
-      string _name;
-
-      for (auto AI = M.alias_begin(), AE = M.alias_end(); AI != AE; ++AI) {
-	DEBUG_OUT("Skipping Alias:"<<AI->getName());
-      }
-
+      handleObjc(M);
+      return true;
       for(auto &F: M){
-	if (F.getName().str().compare("main")==0){
-	  DEBUG_OUT("Skipping main");
-	}
-	else if(F.empty()==false){
-	  //Rename
-	  _name = randomString(16);
-	  DEBUG_OUT("Renaming Function: "<<F.getName()<<" to: "<<_name);
-	  F.setName(randomString(16));
-	}
-	else{
-	  DEBUG_OUT("Skipping External Function: "<<F.getName());
-	}
+	runOnFunction(F, M);
       }
-      // Rename all struct types
-      TypeFinder StructTypes;
-      StructTypes.run(M, true);
+    }
 
-      for (StructType *STy : StructTypes) {
-	if (STy->isLiteral() || STy->getName().empty()) {
-	  DEBUG_OUT("Skipping External Struct: "<<STy->getName());
-	} else {
-	  _name = randomString(16);
-	  DEBUG_OUT("Renaming Struct: "<<STy->getName()<<" to: "<<_name);
-	  STy->setName(randomString(16));
-	}
+    bool runOnFunction(Function &F, Module &M) {
+      Triple Tri(F.getParent()->getTargetTriple());
+      if (!Tri.isAndroid() && !Tri.isOSDarwin()) {
+	errs() << "Unsupported Target Triple:"<< F.getParent()->getTargetTriple() << "\n";
+	return false;
       }
 
+      for (BasicBlock &BB: F) {
+	for (auto I = BB.getFirstInsertionPt(), end = BB.end(); I != end; ++I) {
+	  Instruction &Inst = *I;
+	  if (isa<CallInst>(&Inst) || isa<InvokeInst>(&Inst)) {
+	    CallBase *CB = dyn_cast<CallBase>(&Inst);
+	    Function *calledFunction = CB->getCalledFunction();
+	    if (calledFunction == NULL) {
+	      /*
+		Note:
+		For Indirect Calls:
+                CalledFunction is NULL and calledValue is usually a bitcasted
+		function pointer. We'll need to strip out the hiccups and obtain
+		the called Function* from there
+	      */
+	      calledFunction =
+                dyn_cast<Function>(CB->getCalledOperand()->stripPointerCasts());
+	    }
+	    // Simple Extracting Failed
+	    // Use our own implementation
+	    if (calledFunction == NULL) {
+	      DEBUG_OUT("Failed To Extract Function From Indirect Call: "
+			<< *CB->getCalledOperand());
+	      continue;
+	    }
+	    // It's only safe to restrict our modification to external symbols
+	    // Otherwise stripped binary will crash
+	    if (!calledFunction->empty() ||
+		calledFunction->getName().equals("dlsym") ||
+		calledFunction->getName().equals("dlopen") ||
+		calledFunction->isIntrinsic()) {
+	      continue;
+	    }
+	    string sname = randomString(16);
+            StringRef calledFunctionName = StringRef(sname);
+            BasicBlock *EntryBlock = CB->getParent();
+            IRBuilder<> IRB(EntryBlock, EntryBlock->getFirstInsertionPt());
+            vector<Value *> dlopenargs;
+	    Type *Int32Ty = Type::getInt32Ty(M.getContext());
+	    Type *Int8PtrTy = Type::getInt8PtrTy(M.getContext());
+            dlopenargs.push_back(Constant::getNullValue(Int8PtrTy));
+            dlopenargs.push_back(ConstantInt::get(Int32Ty, DARWIN_FLAG));
+	    Function *dlopen_decl = cast<Function>(M.getFunction("dlopen"));
+	    Function *dlsym_decl = cast<Function>(M.getFunction("dlsym"));
+	    Value *Handle =
+	      IRB.CreateCall(dlopen_decl, ArrayRef<Value *>(dlopenargs));
+            // Create dlsym call
+            vector<Value *> args;
+            args.push_back(Handle);
+            args.push_back(IRB.CreateGlobalStringPtr(calledFunctionName));
+            Value *fp = IRB.CreateCall(dlsym_decl, ArrayRef<Value *>(args));
+            Value *bitCastedFunction =
+	      IRB.CreateBitCast(fp, CB->getCalledOperand()->getType());
+	    CB->setCalledOperand(bitCastedFunction);
+	  }
+	}
+      }
+    }
+
+    void handleObjc(Module &M) {
       for(auto G=M.global_begin(); G!=M.global_end(); G++) {
         GlobalVariable &GV=*G;
         if (GV.getName().str().find("OBJC_CLASSLIST_REFERENCES") == 0) {
@@ -77,17 +211,12 @@ namespace llvm {
 	    for(auto U=GV.user_begin(); U!=GV.user_end(); U++) {
 	      if (Instruction* I = dyn_cast<Instruction>(*U)) {
 		IRBuilder<> builder(I);
-		FunctionType *objc_getClass_type = FunctionType::get(I->getType(),
-								     {Type::getInt8PtrTy(M.getContext())},
-								     false);
-		//Function *objc_getClass_Func = cast<Function>(M.getFunction("objc_getClass"));
-		llvm::FunctionCallee objc_getClass_Func = M.getOrInsertFunction("objc_getClass",
-										objc_getClass_type);
+		Function *objc_getClass_Func = cast<Function>(M.getFunction("objc_getClass"));
 		Value* newClassName=builder.CreateGlobalStringPtr(StringRef(className));
 		CallInst* CI=builder.CreateCall(objc_getClass_Func,{newClassName});
 		I->replaceAllUsesWith(CI);
 		I->eraseFromParent ();
-		DEBUG_OUT("Renaming Class: " << className << "to: " << newClassName);
+		DEBUG_OUT("Renaming Class: " << className << " to: " << newClassName);
 	      }
 	    }
 	  }
@@ -107,16 +236,13 @@ namespace llvm {
 		FunctionType *fn_type = FunctionType::get(I->getType(),
 								     {Type::getInt8PtrTy(M.getContext())},
 								     false);
-		llvm::FunctionCallee sel_registerName_Func = M.getOrInsertFunction("sel_registerName",
-										fn_type);
-
-		//Function *sel_registerName_Func = cast<Function>(M.getFunction("sel_registerName"));
+		Function *sel_registerName_Func = cast<Function>(M.getFunction("sel_registerName"));
 	    	Value *newGlobalSELName = builder.CreateGlobalStringPtr(SELName);
 		CallInst *CI = builder.CreateCall(sel_registerName_Func, {newGlobalSELName});
 	    	Value *BCI = builder.CreateBitCast(CI, I->getType());
 	    	I->replaceAllUsesWith(BCI);
 	    	I->eraseFromParent();
-		DEBUG_OUT("Renaming SEL: " << SELName.str() << "to: " << newGlobalSELName);
+		DEBUG_OUT("Renaming SEL: " << SELName.str() << " to: " << newGlobalSELName);
 	      }
 	    }
 	    GV.removeDeadConstantUsers();
@@ -127,7 +253,6 @@ namespace llvm {
 	  }
 	}
       }
-      return true;
     }
   };
 }
