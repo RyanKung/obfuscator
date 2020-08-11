@@ -43,8 +43,7 @@ namespace llvm {
       for(auto &F: M){
 	StringRef Name = F.getName();
 	LibFunc Tmp;
-	if ((!Name.empty() && Name[0] == 1) ||
-	    getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(F).getLibFunc(F, Tmp)) {
+	if ((!Name.empty() && Name[0] == 1) || F.isDeclaration()) {
 	  DEBUG_OUT("Skipping External Function: "<<F.getName());
 	  continue;
 	}
