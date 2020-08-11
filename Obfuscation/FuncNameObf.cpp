@@ -48,7 +48,7 @@ namespace llvm {
 	  //Rename
 	  _name = randomString(16);
 	  DEBUG_OUT("Renaming Function: "<<F.getName()<<" to: "<<_name);
-	  F.setName(randomString(16));
+	  F.setName(_name);
 	}
 	else{
 	  DEBUG_OUT("Skipping External Function: "<<F.getName());
@@ -64,7 +64,7 @@ namespace llvm {
 	} else {
 	  _name = randomString(16);
 	  DEBUG_OUT("Renaming Struct: "<<STy->getName()<<" to: "<<_name);
-	  STy->setName(randomString(16));
+	  STy->setName(_name);
 	}
       }
 
@@ -72,24 +72,9 @@ namespace llvm {
         GlobalVariable &GV=*G;
         if (GV.getName().str().find("OBJC_CLASSLIST_REFERENCES") == 0) {
 	  if(GV.hasInitializer()) {
-	    string className = (GV.getInitializer ()->getName()).str();
-	    className.replace(className.find("OBJC_CLASS_$_"), strlen("OBJC_CLASS_$_"), "");
-	    for(auto U=GV.user_begin(); U!=GV.user_end(); U++) {
-	      if (Instruction* I = dyn_cast<Instruction>(*U)) {
-		IRBuilder<> builder(I);
-		FunctionType *objc_getClass_type = FunctionType::get(I->getType(),
-								     {Type::getInt8PtrTy(M.getContext())},
-								     false);
-		//Function *objc_getClass_Func = cast<Function>(M.getFunction("objc_getClass"));
-		llvm::FunctionCallee objc_getClass_Func = M.getOrInsertFunction("objc_getClass",
-										objc_getClass_type);
-		Value* newClassName=builder.CreateGlobalStringPtr(StringRef(className));
-		CallInst* CI=builder.CreateCall(objc_getClass_Func,{newClassName});
-		I->replaceAllUsesWith(CI);
-		I->eraseFromParent ();
-		DEBUG_OUT("Renaming Class: " << className << "to: " << newClassName);
-	      }
-	    }
+	    _name = randomString(16);
+	    GV.getInitializer()->setName(randomString(16));
+	    DEBUG_OUT("Renaming Struct: "<<GV.getInitializer()->getName()<<" to: "<<_name);
 	  }
         }
 	else if (GV.getName().str().find("OBJC_SELECTOR_REFERENCES") == 0) {
@@ -100,7 +85,6 @@ namespace llvm {
 	    ConstantDataArray *CDA =
               dyn_cast<ConstantDataArray>(SELNameGV->getInitializer());
 	    StringRef SELName = CDA->getAsString(); // This is REAL Selector Name
-
 	    for (auto U = GV.user_begin(); U != GV.user_end(); U++) {
 	      if (Instruction *I = dyn_cast<Instruction>(*U)) {
 	    	IRBuilder<> builder(I);
@@ -116,7 +100,7 @@ namespace llvm {
 	    	Value *BCI = builder.CreateBitCast(CI, I->getType());
 	    	I->replaceAllUsesWith(BCI);
 	    	I->eraseFromParent();
-		DEBUG_OUT("Renaming SEL: " << SELName.str() << "to: " << newGlobalSELName);
+		DEBUG_OUT("Renaming SEL: " << SELName.str() << " to: " << newGlobalSELName);
 	      }
 	    }
 	    GV.removeDeadConstantUsers();

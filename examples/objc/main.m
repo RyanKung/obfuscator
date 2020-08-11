@@ -18,7 +18,7 @@
 -(id)init {
    self = [super init];
    length = 1.0;
-   breadth = 1.0;
+   width = 1.0;
    return self;
 }
 
