@@ -33,6 +33,9 @@
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Analysis/AliasAnalysis.h"
+#include "llvm/Transforms/Utils/ValueMapper.h"
+#include "llvm/Transforms/Utils/Cloning.h"
 
 using namespace std;
 using namespace llvm;

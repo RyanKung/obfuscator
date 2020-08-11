@@ -3,7 +3,7 @@ obf:
 	-load -Xclang \
 	../../build/Obfuscation/LLVMObfuscation.dylib \
 	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
-	-fobjc-arc ./main.m
+	-fobjc-arc ./main.m \
 
 asm:
 	${CC} -Xclang \

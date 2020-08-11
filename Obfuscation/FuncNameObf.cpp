@@ -6,11 +6,16 @@
 // ref: http://mayuyu.io/2017/06/01/LLVMHacking-0x1/
 // ref: https://llvm.org/doxygen/MetaRenamer_8cpp_source.html
 // ref: http://mayuyu.io/2017/06/02/LLVMHacking-0x2/
+// ref: http://scottcarr.github.io/2016/01/24/my-week-in-llvm.html
+// ref: https://stackoverflow.com/questions/14811587/how-to-get-functiontype-from-callinst-when-call-is-indirect-in-llvm
+// ref: https://stackoverflow.com/questions/40789200/llvm-rename-function-inside-a-module
+// ref: https://stackoverflow.com/questions/13104085/what-to-pass-for-the-vmap-argument-of-clonefunction-in-llvm
 
 using namespace llvm;
 using namespace std;
 
 static string obfcharacters="qwertyuiopasdfghjklzxcvbnm1234567890";
+static string prefix = "obf_";
 
 namespace llvm {
   struct FuncNameObfPass : public ModulePass {
@@ -22,13 +27,21 @@ namespace llvm {
       is_flag = flag;
     }
 
-    string randomString(int length){
+    string randomString(int length) {
       string name;
       name.resize(length);
       for(int i=0;i<length;i++){
         name[i]=obfcharacters[rand()%(obfcharacters.length()+1)];
       }
       return name;
+    }
+
+    string getObfName(int length) {
+      return prefix + randomString(length);
+    }
+
+    bool isObfFun(StringRef &s) {
+      return s.str().rfind(prefix, 0) == 0;
     }
 
     bool runOnModule(Module &M) override {
@@ -40,20 +53,27 @@ namespace llvm {
 	DEBUG_OUT("Skipping Alias:"<<AI->getName());
       }
 
-      for(auto &F: M){
+
+      for(auto &F: M) {
 	StringRef Name = F.getName();
-	LibFunc Tmp;
-	if ((!Name.empty() && Name[0] == 1) || F.isDeclaration()) {
-	  DEBUG_OUT("Skipping External Function: "<<F.getName());
+	if (F.isDeclaration()) {
+	  DEBUG_OUT("Skipping External Function: "<< F.getName());
 	  continue;
 	}
-
-	if (Name != "main"){
-	  _name = randomString(16);
-	  DEBUG_OUT("Renaming Function: "<<F.getName()<<" to: "<<_name);
-	  //	  F.setName(_name);
+	if ((Name != "main") && !isObfFun(Name)){
+	  StringRef fnName = getObfName(16);
+	  auto originName = F.getName();
+	  F.setName(fnName);
+	  //	  F.setName(fnName);
+	  // ValueToValueMapTy vMap;
+	  // auto *clone = llvm::CloneFunction(&F, vMap);
+	  // clone->setLinkage(GlobalValue::InternalLinkage);
+	  // clone->setName(fnName);
+	  DEBUG_OUT("Renaming Function: `"<< originName.str() << "` to: "<<fnName);
+	  // F.getParent() -> getFunctionList().push_back(clone);
+	  // F.replaceAllUsesWith(clone);
+	  // F.eraseFromParent();
 	} else {
-	  DEBUG_OUT("Skipping main");
 	  continue;
 	}
       }
@@ -66,14 +86,18 @@ namespace llvm {
       // 	DEBUG_OUT(GV.getName());
       //   if (GV.getName().str().find("OBJC_CLASSLIST_REFERENCES") == 0) {
       // 	  if(GV.hasInitializer()) {
-      // 	    _name = randomString(16);
-      // 	    GV.getInitializer()->setName(randomString(16));
+      // 	    _name = getObfName(16);
+      // 	    GV.getInitializer()->setName(getObfName(16));
       // 	    DEBUG_OUT("Renaming Struct: "<<GV.getInitializer()->getName()<<" to: "<<_name);
       // 	  }
       //   }
       // }
       return true;
     }
+    void getAnalysisUsage(AnalysisUsage &AU) const {
+      AU.setPreservesCFG();
+    }
+
   };
 }
 
