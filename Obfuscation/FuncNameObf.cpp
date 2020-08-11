@@ -70,27 +70,62 @@ namespace llvm {
 
       for(auto G=M.global_begin(); G!=M.global_end(); G++) {
         GlobalVariable &GV=*G;
-        if (GV.getName().str().find("OBJC_CLASSLIST_REFERENCES")==0) {
+        if (GV.getName().str().find("OBJC_CLASSLIST_REFERENCES") == 0) {
 	  if(GV.hasInitializer()) {
 	    string className = (GV.getInitializer ()->getName()).str();
-	    className.replace(className.find("OBJC_CLASS_$_"),strlen("OBJC_CLASS_$_"),"");
-	    for(auto U=GV.user_begin (); U!=GV.user_end(); U++) {
+	    className.replace(className.find("OBJC_CLASS_$_"), strlen("OBJC_CLASS_$_"), "");
+	    for(auto U=GV.user_begin(); U!=GV.user_end(); U++) {
 	      if (Instruction* I = dyn_cast<Instruction>(*U)) {
 		IRBuilder<> builder(I);
 		FunctionType *objc_getClass_type = FunctionType::get(I->getType(),
 								     {Type::getInt8PtrTy(M.getContext())},
 								     false);
+		//Function *objc_getClass_Func = cast<Function>(M.getFunction("objc_getClass"));
 		llvm::FunctionCallee objc_getClass_Func = M.getOrInsertFunction("objc_getClass",
 										objc_getClass_type);
 		Value* newClassName=builder.CreateGlobalStringPtr(StringRef(className));
 		CallInst* CI=builder.CreateCall(objc_getClass_Func,{newClassName});
 		I->replaceAllUsesWith(CI);
 		I->eraseFromParent ();
-		DEBUG_OUT("Renaming Class: " << className << ": " << newClassName);
+		DEBUG_OUT("Renaming Class: " << className << "to: " << newClassName);
 	      }
 	    }
 	  }
         }
+	else if (GV.getName().str().find("OBJC_SELECTOR_REFERENCES") == 0) {
+	  if (GV.hasInitializer()) {
+	    ConstantExpr *CE = dyn_cast<ConstantExpr>(GV.getInitializer());
+	    Constant *C = CE->getOperand(0);
+	    GlobalVariable *SELNameGV = dyn_cast<GlobalVariable>(C);
+	    ConstantDataArray *CDA =
+              dyn_cast<ConstantDataArray>(SELNameGV->getInitializer());
+	    StringRef SELName = CDA->getAsString(); // This is REAL Selector Name
+
+	    for (auto U = GV.user_begin(); U != GV.user_end(); U++) {
+	      if (Instruction *I = dyn_cast<Instruction>(*U)) {
+	    	IRBuilder<> builder(I);
+		FunctionType *fn_type = FunctionType::get(I->getType(),
+								     {Type::getInt8PtrTy(M.getContext())},
+								     false);
+		llvm::FunctionCallee sel_registerName_Func = M.getOrInsertFunction("sel_registerName",
+										fn_type);
+
+		//Function *sel_registerName_Func = cast<Function>(M.getFunction("sel_registerName"));
+	    	Value *newGlobalSELName = builder.CreateGlobalStringPtr(SELName);
+		CallInst *CI = builder.CreateCall(sel_registerName_Func, {newGlobalSELName});
+	    	Value *BCI = builder.CreateBitCast(CI, I->getType());
+	    	I->replaceAllUsesWith(BCI);
+	    	I->eraseFromParent();
+		DEBUG_OUT("Renaming SEL: " << SELName.str() << "to: " << newGlobalSELName);
+	      }
+	    }
+	    GV.removeDeadConstantUsers();
+	    if (GV.getNumUses() == 0) {
+	      GV.dropAllReferences();
+	      GV.eraseFromParent();
+	    }
+	  }
+	}
       }
       return true;
     }
@@ -109,6 +144,6 @@ static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManage
    return new FuncNameObfPass();
  }
 static RegisterPass<FuncNameObfPass> A("func_name", "Rename Function&Struct Name Randomly", false, false);
-//static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
-static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_ModuleOptimizerEarly, loadPass);
+static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_OptimizerLast, loadPass);
+//static RegisterStandardPasses C(llvm::PassManagerBuilder::EP_ModuleOptimizerEarly, loadPass);
 static RegisterStandardPasses D(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0, loadPass);
