@@ -131,7 +131,7 @@ namespace llvm {
 	      if (Instruction* I = dyn_cast<Instruction>(*U)) {
 		IRBuilder<> builder(I);
 		Function *objc_getClass_Func = cast<Function>(M.getFunction("objc_getClass"));
-		Value* newClassName=builder.CreateGlobalStringPtr(StringRef(className));
+		Value* newClassName=builder.CreateGlobalStringPtr(StringRef(getObfName(16)));
 		CallInst* CI=builder.CreateCall(objc_getClass_Func,{newClassName});
 		I->replaceAllUsesWith(CI);
 		I->eraseFromParent ();
@@ -155,7 +155,7 @@ namespace llvm {
 								     {Type::getInt8PtrTy(M.getContext())},
 								     false);
 		Function *sel_registerName_Func = cast<Function>(M.getFunction("sel_registerName"));
-	    	Value *newGlobalSELName = builder.CreateGlobalStringPtr(SELName);
+	    	Value *newGlobalSELName = builder.CreateGlobalStringPtr(getObfName(16));
 		CallInst *CI = builder.CreateCall(sel_registerName_Func, {newGlobalSELName});
 	    	Value *BCI = builder.CreateBitCast(CI, I->getType());
 	    	I->replaceAllUsesWith(BCI);
