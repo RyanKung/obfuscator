@@ -3,6 +3,7 @@ obf:
 	-load -Xclang \
 	../../build/Obfuscation/LLVMObfuscation.dylib \
 	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
+	-fno-unique-internal-linkage-names \
 	-fobjc-arc ./main.m \
 
 asm:
@@ -10,6 +11,7 @@ asm:
 	-load -Xclang \
 	../../build/Obfuscation/LLVMObfuscation.dylib \
 	-isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
+	-funique-internal-linkage-names \
 	-fobjc-arc -S ./main.m -o obf.bc
 
 bc:
