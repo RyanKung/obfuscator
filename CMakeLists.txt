@@ -36,7 +36,7 @@ add_definitions(-DBOGUSPASS=false)
 add_definitions(-DFLATPASS=false)
 
 # Feature Control: Build with Debug msg output
-add_definitions(-DDEBUG=true)
+add_definitions(-DDEBUG=false)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
