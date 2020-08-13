@@ -1,6 +1,7 @@
 #include "llvm/Transforms/Obfuscation/FuncNameObf.h"
 #include "llvm/Transforms/Obfuscation/macros.h"
 #include "llvm/support/typename.h"
+#include "llvm/IR/ValueSymbolTable.h"
 
 #define DEBUG_TYPE "funcobf"
 
@@ -67,11 +68,12 @@ namespace llvm {
 	  StringRef fnName = getObfName(16);
 	  auto originName = F.getName();
 	  F.setName(fnName);
-
+	  renameSymbol(M, Name.str(), fnName.str());
 	  DEBUG_OUT("Renaming Function: `"<< originName.str() << "` to: "<<fnName);
 	} else {
 	  continue;
 	}
+	// ref: https://llvm.org/doxygen/StripSymbols_8cpp_source.html
       }
       // Rename all struct types
       TypeFinder StructTypes;
@@ -81,7 +83,7 @@ namespace llvm {
       for(auto G=M.global_begin(); G!=M.global_end(); G++) {
         GlobalVariable &GV=*G;
 	_name = getObfName(16);
-	if (GV.isDeclaration()) {
+	if (GV.isDeclaration() || GV.isDeclarationForLinker()) {
 	  DEBUG_OUT("Skipping External Varable: "<< GV.getName());
 	  continue;
 	}
@@ -89,11 +91,23 @@ namespace llvm {
 	  _name = getObfName(16);
 	  llvm::Constant *val = llvm::ConstantDataArray::getString(M.getContext(), _name, true);
 	  val->setName(_name);
-	  GV.setInitializer(val);
+	  //	  GV.setInitializer(val);
 	  DEBUG_OUT("Setting METH_VAR: "<<GV.getInitializer()->getName()<<" to: "<<_name);
+	  renameSymbol(M, GV.getName().str(), _name);
 	}
-	if (GV.getName().str().find("OBJC_CLASSLIST_REFERENCES") == 0) {
-	  // do noting
+	if(GV.getName().str().find("OBJC_CLASS_$_") == 0) {
+	  string className = GV.getName().str();
+	  DEBUG_OUT("Renaming Varable: "<<GV.getName()<<" to: "<<_name);
+	  className.replace(className.find("OBJC_CLASS_$_"), strlen("OBJC_CLASS_$_"), "");
+
+	  if(GV.hasInitializer()) {
+	    _name = getObfName(8);
+	    llvm::Constant *val = llvm::ConstantDataArray::getString(M.getContext(), _name, false);
+	    //GV.setInitializer(val);
+	    DEBUG_OUT("Setting OBJC_CLASS: "<<GV.getName()<<" to: "<<_name);
+	    //GV.setName(_name);
+	    renameSymbol(M, GV.getName().str(), _name);
+	  }
 	}
 	DEBUG_OUT("Renaming Variable: "<<GV.getName()<<" to: "<<_name);
 	if(GV.isConstant() && GV.hasInitializer()) {
@@ -103,74 +117,24 @@ namespace llvm {
       }
       return true;
     }
-    void handleObjc(Module &M) {
-
-      Type *Int8PtrTy = Type::getInt8PtrTy(M.getContext());
-      FunctionType *sel_registerName_type =
-        FunctionType::get(Int8PtrTy, {Int8PtrTy}, false);
-      FunctionType *objc_getClass_type =
-	FunctionType::get(Int8PtrTy, {Int8PtrTy}, false);
-
-      M.getOrInsertFunction("objc_getClass", objc_getClass_type);
-      M.getOrInsertFunction("sel_registerName", sel_registerName_type);
-
-            for(auto G=M.global_begin(); G!=M.global_end(); G++) {
-        GlobalVariable &GV=*G;
-        if (GV.getName().str().find("OBJC_CLASSLIST_REFERENCES") == 0) {
-	  if(GV.hasInitializer()) {
-	    string className = (GV.getInitializer ()->getName()).str();
-	    className.replace(className.find("OBJC_CLASS_$_"), strlen("OBJC_CLASS_$_"), "");
-	    for(auto U=GV.user_begin(); U!=GV.user_end(); U++) {
-	      if (Instruction* I = dyn_cast<Instruction>(*U)) {
-		IRBuilder<> builder(I);
-		Function *objc_getClass_Func = cast<Function>(M.getFunction("objc_getClass"));
-		Value* newClassName=builder.CreateGlobalStringPtr(StringRef(getObfName(16)));
-		CallInst* CI=builder.CreateCall(objc_getClass_Func,{newClassName});
-		I->replaceAllUsesWith(CI);
-		I->eraseFromParent ();
-		DEBUG_OUT("Renaming Class: " << className << " to: " << newClassName);
-	      }
-	    }
-	  }
-        } else if (GV.getName().str().find("OBJC_SELECTOR_REFERENCES") == 0) {
-	  if (GV.hasInitializer()) {
-	    ConstantExpr *CE = dyn_cast<ConstantExpr>(GV.getInitializer());
-	    Constant *C = CE->getOperand(0);
-	    GlobalVariable *SELNameGV = dyn_cast<GlobalVariable>(C);
-	    ConstantDataArray *CDA =
-              dyn_cast<ConstantDataArray>(SELNameGV->getInitializer());
-	    StringRef SELName = CDA->getAsString(); // This is REAL Selector Name
-
-	    for (auto U = GV.user_begin(); U != GV.user_end(); U++) {
-	      if (Instruction *I = dyn_cast<Instruction>(*U)) {
-	    	IRBuilder<> builder(I);
-		FunctionType *fn_type = FunctionType::get(I->getType(),
-								     {Type::getInt8PtrTy(M.getContext())},
-								     false);
-		Function *sel_registerName_Func = cast<Function>(M.getFunction("sel_registerName"));
-	    	Value *newGlobalSELName = builder.CreateGlobalStringPtr(getObfName(16));
-		CallInst *CI = builder.CreateCall(sel_registerName_Func, {newGlobalSELName});
-	    	Value *BCI = builder.CreateBitCast(CI, I->getType());
-	    	I->replaceAllUsesWith(BCI);
-	    	I->eraseFromParent();
-		DEBUG_OUT("Renaming SEL: " << SELName.str() << " to: " << newGlobalSELName);
-	      }
-	    }
-	    GV.removeDeadConstantUsers();
-	    if (GV.getNumUses() == 0) {
-	      GV.dropAllReferences();
-	      GV.eraseFromParent();
-	    }
-	  }
-	}
-      }
-    }
     void getAnalysisUsage(AnalysisUsage &AU) const {
       AU.setPreservesCFG();
     }
-
+    void renameSymbol(Module &M, string Name, string toName) {
+      ValueSymbolTable ST = M.getValueSymbolTable();
+      for (ValueSymbolTable::iterator VI = ST.begin(), VE = ST.end(); VI != VE; ) {
+	Value *V = VI->getValue();
+	++VI;
+	if(V->getName().str().find(Name) == 0) {
+	    if (!isa<GlobalValue>(V) || cast<GlobalValue>(V)->hasLocalLinkage()) {
+	      V->setName(toName);
+	    }
+	}
+      }
+    }
   };
 }
+
 
 char FuncNameObfPass::ID = 0;
 static void loadPass(const PassManagerBuilder &Builder, llvm::legacy::PassManagerBase &PM) {
